@@ -7,8 +7,6 @@ Module for the Discord bot.
 Connecting, sending and receiving messages and doing custom actions.
 """
 
-import logging
-
 import discord
 
 from bot import Bot
@@ -32,16 +30,16 @@ class DiscordBot(discord.Client, Bot):
     async def checkMarvinActions(self, message):
         """Check if Marvin should perform any actions"""
         words = self.tokenize(message.content)
-        if self.user.name.lower() in words:
+        if self.user.mentioned_in(message) or self.user.name.lower() in words:
             for action in self.ACTIONS:
                 response = action(words)
                 if response:
-                    await message.channel.send(response)
+                    await message.reply(response)
         else:
             for action in self.GENERAL_ACTIONS:
                 response = action(words)
                 if response:
-                    await message.channel.send(response)
+                    await message.reply(response)
 
     async def on_message(self, message):
         """Hook run on every message"""
@@ -50,3 +48,7 @@ class DiscordBot(discord.Client, Bot):
             # don't react to own messages
             return
         await self.checkMarvinActions(message)
+
+    async def on_message_edit(self, _, after):
+        """Hook run on every edited message"""
+        await self.on_message(after)
